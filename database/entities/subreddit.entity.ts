@@ -15,23 +15,23 @@ class LowercaseTransformer implements ValueTransformer {
 
 @Entity()
 export class Subreddit {
-    @PrimaryColumn() // collation: "NOCASE" makes the column case insensitive
+    @PrimaryColumn('text') // collation: "NOCASE" makes the column case insensitive
     name: string
 
-    @Column({ nullable: true })
+    @Column('text', { nullable: true })
     last_checked: string // ISO 8601
 
-    @Column({ nullable: true })
+    @Column('integer', { nullable: true })
     subscriber_count: number
 
-    @Column({ nullable: true })
+    @Column('text', { nullable: true })
     modwiki_category: string
 
-    @Column({ nullable: true })
+    @Column('text', { nullable: true })
     status: string
 
 
-    @Column({ nullable: true })
+    @Column('text', { nullable: true })
     protest_message: string
 
 }

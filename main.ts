@@ -1,3 +1,5 @@
+import "reflect-metadata";
+
 import { AppDataSource } from "./database/data-source";
 import { Subreddit } from "./database/entities/subreddit.entity";
 const subredditRepository = AppDataSource.getRepository(Subreddit)
@@ -363,14 +365,7 @@ async function updateStatus() {
     }
 }
 
-(async () => {
-    try {
-        await AppDataSource.initialize();
-    } catch (error) {
-        console.log(error);
-    }
-
-
+AppDataSource.initialize().then(async () => {
     rescrapeModDarkList()
 
     setInterval(async () => {
@@ -385,6 +380,33 @@ async function updateStatus() {
     setInterval(async () => {
         await writeSubredditJSON();
     }, 5000);
+}).catch((error) => {
+    console.log(error);
+});
+
+// (async () => {
+//     try {
+//         await AppDataSource.initialize();
+//         console.log('database initialized');
+//     } catch (error) {
+//         console.log(error);
+//     }
 
 
-})();
+//     rescrapeModDarkList()
+
+//     setInterval(async () => {
+//         await rescrapeModDarkList();
+//     }, 15 * 60 * 1000);
+
+//     setInterval(async () => {
+//         await pollSubreddits();
+//     }, 5000);
+//     // await updateStatus();
+
+//     setInterval(async () => {
+//         await writeSubredditJSON();
+//     }, 5000);
+
+
+// })();
