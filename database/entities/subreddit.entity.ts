@@ -19,12 +19,19 @@ export class Subreddit {
     name: string
 
     @Column({ nullable: true })
-    last_checked: number // unix timestamp
+    last_checked: string // ISO 8601
 
     @Column({ nullable: true })
     subscriber_count: number
 
     @Column({ nullable: true })
     modwiki_category: string
+
+    @Column({ nullable: true })
+    status: string
+
+
+    @Column({ nullable: true })
+    protest_message: string
 
 }

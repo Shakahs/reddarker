@@ -1,7 +1,8 @@
 import { AppDataSource } from "./database/data-source";
 import { Subreddit } from "./database/entities/subreddit.entity";
-const userRepository = AppDataSource.getRepository(Subreddit)
+const subredditRepository = AppDataSource.getRepository(Subreddit)
 import { EntityManager } from 'typeorm';
+import * as cheerio from 'cheerio';
 
 const express = require('express');
 const app = express();
@@ -104,16 +105,56 @@ async function insertSubreddits() {
                 const sub = new Subreddit();
                 sub.name = subreddits[section][subreddit].name;
                 sub.modwiki_category = section;
-                await userRepository.upsert(sub, { conflictPaths: ["name"] });
+                await subredditRepository.upsert(sub, { conflictPaths: ["name"] });
             }
         }
     })
-
-
-
-
 }
 
+async function pollSubreddits() {
+    // const subToCheck = await subredditRepository.findOne({ where: { name: 'r/SongWriter' } });
+    const subToCheck = await subredditRepository
+        .createQueryBuilder('subreddit')
+        .select()
+        .orderBy('RANDOM()')
+        .getOne();
+    console.log('polling: ' + subToCheck.name);
+    if (subToCheck) {
+        const checkUrl = `https://old.reddit.com/${subToCheck.name}`
+        console.log('checking: ' + checkUrl);
+        const data = await fetch(checkUrl);
+        console.log('status: ' + data.status)
+        const html = await data.text();
+        const $ = cheerio.load(html);
+
+
+
+
+        //Sub is private:
+        if ($('.interstitial-subreddit-description').length > 0) {
+            console.log('found private subreddit')
+            // Find the DOM node with class .interstitial-subreddit-description
+            const interstitialNode = $('.interstitial-subreddit-description');
+
+            // Get the text content of the <p> node
+            const text = interstitialNode.text();
+            console.log(text);
+
+            subToCheck.status = "private";
+            subToCheck.last_checked = new Date().toISOString();
+            subToCheck.protest_message = interstitialNode.text();
+            subredditRepository.save(subToCheck);
+        } else if ($('input[name="q"]').length > 0) {
+            //found search input, subreddit is open
+            console.log('found open subreddit')
+            subToCheck.status = "public";
+            subToCheck.last_checked = new Date().toISOString();
+            subToCheck.protest_message = null;
+            subredditRepository.save(subToCheck);
+        }
+
+    }
+}
 
 
 let firstCheck = false;
@@ -233,5 +274,8 @@ async function updateStatus() {
     }
     // await parseModWiki();
     await insertSubreddits();
+    setInterval(async () => {
+        await pollSubreddits();
+    }, 5000);
     // await updateStatus();
 })();
