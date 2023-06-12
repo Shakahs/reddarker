@@ -112,14 +112,17 @@ async function insertSubreddits() {
 }
 
 async function pollSubreddits() {
-    // const subToCheck = await subredditRepository.findOne({ where: { name: 'r/SongWriter' } });
-    const subToCheck = await subredditRepository
-        .createQueryBuilder('subreddit')
-        .select()
-        .orderBy('RANDOM()')
-        .getOne();
-    console.log('polling: ' + subToCheck.name);
-    if (subToCheck) {
+    const subToCheckList = await subredditRepository.find({ order: { last_checked: "ASC" }, take: 1 })
+    // const subToCheck = await subredditRepository
+    //     .createQueryBuilder('subreddit')
+    //     .select()
+    //     .orderBy('RANDOM()')
+    //     .getOne();
+    // console.log('polling: ' + subToCheck.name);
+    if (subToCheckList.length > 0) {
+        const subToCheck = subToCheckList[0];
+        console.log('polling: ' + subToCheck.name);
+
         const checkUrl = `https://old.reddit.com/${subToCheck.name}`
         console.log('checking: ' + checkUrl);
         const data = await fetch(checkUrl);
@@ -130,24 +133,31 @@ async function pollSubreddits() {
 
 
 
-        //Sub is private:
         if ($('.interstitial-subreddit-description').length > 0) {
+            //Sub is private
             console.log('found private subreddit')
             // Find the DOM node with class .interstitial-subreddit-description
             const interstitialNode = $('.interstitial-subreddit-description');
 
-            // Get the text content of the <p> node
-            const text = interstitialNode.text();
-            console.log(text);
+            // Get the content of the subreddit protest message 
+            const protestMessageContent = interstitialNode.html();
+            console.log(protestMessageContent);
 
             subToCheck.status = "private";
             subToCheck.last_checked = new Date().toISOString();
-            subToCheck.protest_message = interstitialNode.text();
+            subToCheck.protest_message = protestMessageContent
             subredditRepository.save(subToCheck);
         } else if ($('input[name="q"]').length > 0) {
             //found search input, subreddit is open
             console.log('found open subreddit')
             subToCheck.status = "public";
+            subToCheck.last_checked = new Date().toISOString();
+            subToCheck.protest_message = null;
+            subredditRepository.save(subToCheck);
+        } else if ($('.morelink').text().includes("restricted")) {
+            //subreddit is restricted
+            console.log('found restricted subreddit')
+            subToCheck.status = "restricted";
             subToCheck.last_checked = new Date().toISOString();
             subToCheck.protest_message = null;
             subredditRepository.save(subToCheck);
@@ -273,7 +283,7 @@ async function updateStatus() {
         console.log(error);
     }
     // await parseModWiki();
-    await insertSubreddits();
+    // await insertSubreddits();
     setInterval(async () => {
         await pollSubreddits();
     }, 5000);
