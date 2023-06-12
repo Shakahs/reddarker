@@ -7,3 +7,5 @@ src/list.json
 database.sqlite
 public/dist
 subreddits.json
+dist/
+.DS_store
