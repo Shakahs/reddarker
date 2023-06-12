@@ -3,6 +3,7 @@ import { Subreddit } from "./database/entities/subreddit.entity";
 const subredditRepository = AppDataSource.getRepository(Subreddit)
 import { EntityManager } from 'typeorm';
 import * as cheerio from 'cheerio';
+import { sample } from 'lodash';
 
 const express = require('express');
 const app = express();
@@ -112,7 +113,7 @@ async function insertSubreddits() {
 }
 
 async function pollSubreddits() {
-    const subToCheckList = await subredditRepository.find({ order: { last_checked: "ASC" }, take: 1 })
+    const subToCheckList = await subredditRepository.find({ order: { last_checked: "ASC" }, take: 100 })
     // const subToCheck = await subredditRepository
     //     .createQueryBuilder('subreddit')
     //     .select()
@@ -120,15 +121,16 @@ async function pollSubreddits() {
     //     .getOne();
     // console.log('polling: ' + subToCheck.name);
     if (subToCheckList.length > 0) {
-        const subToCheck = subToCheckList[0];
-        console.log('polling: ' + subToCheck.name);
+        const subToCheck = sample(subToCheckList); // Pick a random subreddit to check
+        console.log(`${subToCheck.name}: checking`);
 
         const checkUrl = `https://old.reddit.com/${subToCheck.name}`
-        console.log('checking: ' + checkUrl);
+        console.log(`${subToCheck.name}: retrieving ${checkUrl}`);
+
         const data = await fetch(checkUrl);
-        console.log('status: ' + data.status)
+        console.log(`${subToCheck.name}: HTTP status ${data.status}`);
         if (data.status >= 500) {
-            console.log('server error, skipping')
+            console.log(`${subToCheck.name}: server error, skipping`);
             // subToCheck.last_checked = new Date().toISOString();
             // subredditRepository.save(subToCheck);
             return;
@@ -146,13 +148,15 @@ async function pollSubreddits() {
 
             if ($('.interstitial-subreddit-description').length > 0) {
                 //Sub is private
-                console.log('found private subreddit')
+                console.log(`${subToCheck.name}: found private subreddit`);
+
                 // Find the DOM node with class .interstitial-subreddit-description
                 const interstitialNode = $('.interstitial-subreddit-description');
 
                 // Get the content of the subreddit protest message 
                 const protestMessageContent = interstitialNode.html();
-                console.log(protestMessageContent);
+                // console.log(protestMessageContent);
+
 
                 subToCheck.status = "private";
                 subToCheck.last_checked = new Date().toISOString();
@@ -160,7 +164,7 @@ async function pollSubreddits() {
                 subredditRepository.save(subToCheck);
             } else if ($('.morelink').text().includes("restricted")) {
                 //subreddit is restricted
-                console.log('found restricted subreddit')
+                console.log(`${subToCheck.name}: found restricted subreddit`);
                 subToCheck.status = "restricted";
                 subToCheck.last_checked = new Date().toISOString();
                 subToCheck.protest_message = null;
@@ -168,7 +172,7 @@ async function pollSubreddits() {
                 subredditRepository.save(subToCheck);
             } else if ($('input[name="q"]').length > 0) {
                 //found search input, subreddit is open
-                console.log('found open subreddit')
+                console.log(`${subToCheck.name}: found open subreddit`);
                 subToCheck.status = "public";
                 subToCheck.last_checked = new Date().toISOString();
                 subToCheck.protest_message = null;
@@ -178,11 +182,13 @@ async function pollSubreddits() {
                 //fallback to JSON version
                 //necessary for adult subs with age gate
                 const checkUrl = `https://old.reddit.com/${subToCheck.name}.json`
-                console.log('checking JSON version of: ' + checkUrl);
+                console.log(`${subToCheck.name}: falling back to JSON version`);
+
                 const data = await fetch(checkUrl);
-                console.log('JSON request status: ' + data.status)
+                console.log(`${subToCheck.name}: `, 'JSON request status: ' + data.status);
                 const json = await data.json();
                 if (json['reason'] == "private") {
+                    console.log(`${subToCheck.name}: detected as private from JSON data`);
                     subToCheck.status = 'private'
                     subToCheck.last_checked = new Date().toISOString();
                     subredditRepository.save(subToCheck);
@@ -192,7 +198,7 @@ async function pollSubreddits() {
                     //found posts, subreddit is open
                     const subredditStatus = json['data']['children'][0]['data']['subreddit_type']
                     const subredditSubscriberCount = json['data']['children'][0]['data']['subreddit_subscribers']
-                    console.log('status: ' + subredditStatus)
+                    console.log(`${subToCheck.name}: detected as ${subredditStatus} from JSON data`);
                     subToCheck.status = subredditStatus
                     subToCheck.last_checked = new Date().toISOString();
                     subToCheck.protest_message = null;
@@ -204,7 +210,7 @@ async function pollSubreddits() {
             }
         } catch (e) {
             console.log(e);
-            console.log('error, skipping')
+            console.log(`${subToCheck.name}: `, 'error, skipping');
             // subToCheck.last_checked = new Date().toISOString();
             // subredditRepository.save(subToCheck);
             return;
