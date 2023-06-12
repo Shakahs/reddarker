@@ -127,42 +127,89 @@ async function pollSubreddits() {
         console.log('checking: ' + checkUrl);
         const data = await fetch(checkUrl);
         console.log('status: ' + data.status)
+        if (data.status >= 500) {
+            console.log('server error, skipping')
+            // subToCheck.last_checked = new Date().toISOString();
+            // subredditRepository.save(subToCheck);
+            return;
+        }
+
+
         const html = await data.text();
         const $ = cheerio.load(html);
 
 
 
+        try {
 
-        if ($('.interstitial-subreddit-description').length > 0) {
-            //Sub is private
-            console.log('found private subreddit')
-            // Find the DOM node with class .interstitial-subreddit-description
-            const interstitialNode = $('.interstitial-subreddit-description');
 
-            // Get the content of the subreddit protest message 
-            const protestMessageContent = interstitialNode.html();
-            console.log(protestMessageContent);
 
-            subToCheck.status = "private";
-            subToCheck.last_checked = new Date().toISOString();
-            subToCheck.protest_message = protestMessageContent
-            subredditRepository.save(subToCheck);
-        } else if ($('input[name="q"]').length > 0) {
-            //found search input, subreddit is open
-            console.log('found open subreddit')
-            subToCheck.status = "public";
-            subToCheck.last_checked = new Date().toISOString();
-            subToCheck.protest_message = null;
-            subredditRepository.save(subToCheck);
-        } else if ($('.morelink').text().includes("restricted")) {
-            //subreddit is restricted
-            console.log('found restricted subreddit')
-            subToCheck.status = "restricted";
-            subToCheck.last_checked = new Date().toISOString();
-            subToCheck.protest_message = null;
-            subredditRepository.save(subToCheck);
+            if ($('.interstitial-subreddit-description').length > 0) {
+                //Sub is private
+                console.log('found private subreddit')
+                // Find the DOM node with class .interstitial-subreddit-description
+                const interstitialNode = $('.interstitial-subreddit-description');
+
+                // Get the content of the subreddit protest message 
+                const protestMessageContent = interstitialNode.html();
+                console.log(protestMessageContent);
+
+                subToCheck.status = "private";
+                subToCheck.last_checked = new Date().toISOString();
+                subToCheck.protest_message = protestMessageContent
+                subredditRepository.save(subToCheck);
+            } else if ($('.morelink').text().includes("restricted")) {
+                //subreddit is restricted
+                console.log('found restricted subreddit')
+                subToCheck.status = "restricted";
+                subToCheck.last_checked = new Date().toISOString();
+                subToCheck.protest_message = null;
+                subToCheck.subscriber_count = Number($('.subscribers').children('.number').text().replaceAll(",", ""));
+                subredditRepository.save(subToCheck);
+            } else if ($('input[name="q"]').length > 0) {
+                //found search input, subreddit is open
+                console.log('found open subreddit')
+                subToCheck.status = "public";
+                subToCheck.last_checked = new Date().toISOString();
+                subToCheck.protest_message = null;
+                subToCheck.subscriber_count = Number($('.subscribers').children('.number').text().replaceAll(",", ""));
+                subredditRepository.save(subToCheck);
+            } else {
+                //fallback to JSON version
+                //necessary for adult subs with age gate
+                const checkUrl = `https://old.reddit.com/${subToCheck.name}.json`
+                console.log('checking JSON version of: ' + checkUrl);
+                const data = await fetch(checkUrl);
+                console.log('JSON request status: ' + data.status)
+                const json = await data.json();
+                if (json['reason'] == "private") {
+                    subToCheck.status = 'private'
+                    subToCheck.last_checked = new Date().toISOString();
+                    subredditRepository.save(subToCheck);
+
+                }
+                else if (json['data']['children'].length > 0) {
+                    //found posts, subreddit is open
+                    const subredditStatus = json['data']['children'][0]['data']['subreddit_type']
+                    const subredditSubscriberCount = json['data']['children'][0]['data']['subreddit_subscribers']
+                    console.log('status: ' + subredditStatus)
+                    subToCheck.status = subredditStatus
+                    subToCheck.last_checked = new Date().toISOString();
+                    subToCheck.protest_message = null;
+                    subToCheck.subscriber_count = subredditSubscriberCount
+                    subredditRepository.save(subToCheck);
+                }
+
+
+            }
+        } catch (e) {
+            console.log(e);
+            console.log('error, skipping')
+            // subToCheck.last_checked = new Date().toISOString();
+            // subredditRepository.save(subToCheck);
+            return;
+
         }
-
     }
 }
 
