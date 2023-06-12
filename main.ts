@@ -4,6 +4,8 @@ const subredditRepository = AppDataSource.getRepository(Subreddit)
 import { EntityManager } from 'typeorm';
 import * as cheerio from 'cheerio';
 import { sample } from 'lodash';
+import { group } from "console";
+import { writeFile } from 'node:fs/promises';
 
 const express = require('express');
 const app = express();
@@ -220,6 +222,27 @@ async function pollSubreddits() {
 }
 
 
+async function writeSubredditJSON() {
+    try {
+        const knownSubreddits = await subredditRepository.find({ order: { modwiki_category: 'ASC', name: 'ASC' } })
+        const output: ISubredditList = {}
+        for (const subreddit of knownSubreddits) {
+            if (output[subreddit.modwiki_category] == undefined) {
+                output[subreddit.modwiki_category] = []
+            }
+
+            output[subreddit.modwiki_category].push(subreddit)
+        }
+
+        await writeFile('subreddits.json', JSON.stringify(output))
+        console.log('subreddits.json written');
+    } catch (e) {
+        console.log(e);
+        console.log('error writing subreddits.json');
+    }
+}
+
+
 let firstCheck = false;
 var countTimeout = null;
 io.on('connection', (socket) => {
@@ -335,10 +358,18 @@ async function updateStatus() {
     } catch (error) {
         console.log(error);
     }
+
+
     // await parseModWiki();
     // await insertSubreddits();
     setInterval(async () => {
         await pollSubreddits();
     }, 5000);
     // await updateStatus();
+
+    setInterval(async () => {
+        await writeSubredditJSON();
+    }, 5000);
+
+
 })();
