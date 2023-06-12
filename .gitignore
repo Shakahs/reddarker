@@ -4,3 +4,4 @@ config.js
 .tool-versions
 src/list.json
 .wrangler
+database.sqlite
