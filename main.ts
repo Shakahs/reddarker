@@ -78,7 +78,7 @@ async function parseModWiki(): Promise<ISubredditList> {
     //subreddits_src["30+ million:"].push("r/tanzatest")
 
     for (var section in subreddits_src) {
-        console.log(section);
+        // console.log(section);
         subreddits[section] = [];
         for (var subreddit in subreddits_src[section]) {
             subreddits[section].push({
@@ -87,14 +87,15 @@ async function parseModWiki(): Promise<ISubredditList> {
             });
         }
     }
-    console.log(subreddits);
+    // console.log(subreddits);
     return subreddits
 }
 
-async function insertSubreddits() {
+async function rescrapeModDarkList() {
     const subreddits = await parseModWiki();
 
     await AppDataSource.transaction(async (transactionalEntityManager) => {
+        let insertCount = 0
         // execute queries using transactionalEntityManager
         for (var section in subreddits) {
             for (var subreddit in subreddits[section]) {
@@ -102,8 +103,10 @@ async function insertSubreddits() {
                 sub.name = subreddits[section][subreddit].name;
                 sub.modwiki_category = section;
                 await subredditRepository.upsert(sub, { conflictPaths: ["name"] });
+                insertCount++;
             }
         }
+        console.log('Scraped ' + insertCount + ' subreddits from mod wiki')
     })
 }
 
@@ -368,8 +371,12 @@ async function updateStatus() {
     }
 
 
-    // await parseModWiki();
-    // await insertSubreddits();
+    rescrapeModDarkList()
+
+    setInterval(async () => {
+        await rescrapeModDarkList();
+    }, 15 * 60 * 1000);
+
     setInterval(async () => {
         await pollSubreddits();
     }, 5000);
