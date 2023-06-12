@@ -42,12 +42,12 @@ async function appendList(url) {
     var sectionname = "";
     var data = await request.httpsGet(url);
     data = JSON.parse(data);
-    text = data['data']['content_md'];
+    const text = data['data']['content_md'];
     //console.log(text);
-    lines = text.split("\n");
+    const lines = text.split("\n");
     for (var line of lines) {
         if (line.startsWith("##") && !line.includes("Please") && line.includes(":")) {
-            if (section != []) subreddits_src[sectionname] = section;
+            if (section.length > 0) subreddits_src[sectionname] = section;
             section = [];
             sectionname = line.replace("##", "");
         }
@@ -79,7 +79,7 @@ async function createList() {
 
 
 
-firstCheck = false;
+let firstCheck = false;
 var countTimeout = null;
 io.on('connection', (socket) => {
     if (firstCheck == false) {
