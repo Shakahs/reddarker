@@ -1,12 +1,16 @@
 import { createRoot } from 'react-dom/client';
 import './tailwind.css'
 import { ISubredditList } from '../types';
-// const data: ISubredditList = i
-// import data from './subreddits.json'
 import { map, keys } from 'lodash'
+import {
+    useQuery,
+    useMutation,
+    useQueryClient,
+    QueryClient,
+    QueryClientProvider,
+} from 'react-query'
 
-const sr: ISubredditList = {}
-
+const queryClient = new QueryClient()
 
 const srKeys = [
     "40+ million:\r",
@@ -25,9 +29,17 @@ const srKeys = [
     "5k+:\r",
     "5k and below:\r",
 ];
-console.log(srKeys)
 
 function RootLayout() {
+    const subredditPollResult = useQuery<ISubredditList>({
+        queryKey: 'subreddits',
+        queryFn: () => fetch('/api/subreddits.json').then(res => res.json()),
+        refetchInterval: 1000 * 5,
+        placeholderData: {}
+    })
+    const { data: subredditData } = subredditPollResult
+
+
     return (
         <div className='h-full w-full p-3 bg-gray-800  text-gray-200 flex flex-col  '>
             <div className=' px-10 flex flex-col '>
@@ -41,7 +53,7 @@ function RootLayout() {
             </div>
             {map(srKeys, (sectionName) => {
 
-                const section = sr[sectionName]
+                const section = subredditData[sectionName]
 
                 return (
                     <div key={sectionName}>
@@ -63,4 +75,6 @@ function RootLayout() {
 }
 
 const root = createRoot(document.getElementById('react-root'));
-root.render(<RootLayout />);
+root.render(<QueryClientProvider client={queryClient}>
+    <RootLayout />
+</QueryClientProvider>);
