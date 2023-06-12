@@ -33,11 +33,21 @@ function isJson(item) {
     return typeof value === "object" && value !== null;
 }
 
-const subreddits_src = {
 
+
+interface ISubreddit {
+    name: string;
+    status: string;
 }
-const subreddits = {};
-async function appendList(url) {
+
+interface ISubredditList {
+    [key: string]: ISubreddit[];
+}
+
+
+const subreddits: ISubredditList = {};
+async function retrieveModWiki(url) {
+    const subreddits_src = {};
     var section = [];
     var sectionname = "";
     var data = await request.httpsGet(url);
@@ -56,10 +66,12 @@ async function appendList(url) {
         }
     }
     subreddits_src[sectionname] = section;
+    return subreddits_src
+
 }
-async function createList() {
+async function parseModWiki(): Promise<ISubredditList> {
     // getting the list of participating subs from the modcoord wiki page
-    await appendList("/r/ModCoord/wiki/index.json");
+    const subreddits_src = await retrieveModWiki("/r/ModCoord/wiki/index.json");
     console.log("grabbed subreddits");
     //subreddits_src["30+ million:"].push("r/tanzatest")
 
@@ -74,7 +86,7 @@ async function createList() {
         }
     }
     console.log(subreddits);
-    return;
+    return subreddits
 }
 
 
@@ -188,6 +200,6 @@ async function updateStatus() {
     }
 }
 (async () => {
-    await createList();
-    await updateStatus();
+    await parseModWiki();
+    // await updateStatus();
 })();
