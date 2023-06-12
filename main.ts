@@ -6,7 +6,7 @@ import * as cheerio from 'cheerio';
 import { sample } from 'lodash';
 import { group } from "console";
 import { writeFile } from 'node:fs/promises';
-import { ISubredditList, ISubreddit } from "./types"
+import { ISubredditList, ISubreddit, ISubredditData } from "./types"
 const express = require('express');
 const app = express();
 const http = require('http');
@@ -218,16 +218,31 @@ async function pollSubreddits() {
 async function writeSubredditJSON() {
     try {
         const knownSubreddits = await subredditRepository.find({ order: { modwiki_category: 'ASC', name: 'ASC' } })
-        const output: ISubredditList = {}
+        const subredditList: ISubredditList = {}
         for (const subreddit of knownSubreddits) {
-            if (output[subreddit.modwiki_category] == undefined) {
-                output[subreddit.modwiki_category] = []
+            if (subredditList[subreddit.modwiki_category] == undefined) {
+                subredditList[subreddit.modwiki_category] = []
             }
-
-            output[subreddit.modwiki_category].push(subreddit)
+            subredditList[subreddit.modwiki_category].push(subreddit)
         }
 
-        await writeFile('subreddits.json', JSON.stringify(output))
+        const totalCount = await subredditRepository.count();
+        const privateCount = await subredditRepository.count({
+            where: [
+                { status: 'private' },
+                { status: 'restricted' }
+            ]
+        });
+
+        const dataDump: ISubredditData = {
+            subreddits: subredditList,
+            counts: {
+                total: totalCount,
+                private: privateCount
+            }
+        }
+
+        await writeFile('subreddits.json', JSON.stringify(dataDump))
         console.log('subreddits.json written');
     } catch (e) {
         console.log(e);

@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import './tailwind.css'
-import { ISubredditList } from '../types';
+import { ISubredditData, ISubredditList } from '../types';
 import { map, keys } from 'lodash'
 import {
     useQuery,
@@ -31,29 +31,31 @@ const srKeys = [
 ];
 
 function RootLayout() {
-    const subredditPollResult = useQuery<ISubredditList>({
+    const subredditPollResult = useQuery<ISubredditData>({
         queryKey: 'subreddits',
         queryFn: () => fetch('/api/subreddits.json').then(res => res.json()),
         refetchInterval: 1000 * 5,
-        placeholderData: {}
+        placeholderData: { counts: { total: 0, private: 0 }, subreddits: {} }
     })
     const { data: subredditData } = subredditPollResult
 
-
     return (
         <div className='h-full w-full p-3 bg-gray-800  text-gray-200 flex flex-col  '>
-            <div className=' px-10 flex flex-col '>
-                <div className='text-sm'>Watch a 24/7 stream of this site at twitch.tv/reddark_247!</div>
-                <div className='text-4xl py-6 font-bold'>✊ Reddark</div>
-                <div className='text-2xl'>These subreddits are going dark or read-only on June 12th and after. Some already are. Click here to find out why.</div>
-                <div>Like the website? Contribute here!</div>
+            <div className='w-full flex flex-col items-center  '>
+                <div className='w-5/6 px-10 flex flex-col   '>
+                    <div className='text-sm'>Watch a 24/7 stream of this site at twitch.tv/reddark_247!</div>
+                    <div className='text-4xl py-6 font-bold'>✊ Reddark</div>
+                    <div className='text-2xl'>These subreddits are going dark or read-only on June 12th and after. Some already are. Click here to find out why.</div>
+                    <div>Like the website? Contribute here!</div>
+                </div>
             </div>
-            <div className='w-full bg-gray-900'>
-                Menu goes here
+            <div className='w-full bg-gray-900 flex  flex-row justify-end items-center py-2 my-4'>
+                {/* <div>search</div> */}
+                <div><span className='text-2xl pr-1'>{subredditData.counts.private}</span> / {subredditData.counts.total} subreddits are currently dark.</div>
             </div>
             {map(srKeys, (sectionName) => {
 
-                const section = subredditData[sectionName]
+                const section = subredditData.subreddits[sectionName]
 
                 return (
                     <div key={sectionName}>

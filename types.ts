@@ -6,3 +6,11 @@ export interface ISubreddit {
 export interface ISubredditList {
     [key: string]: ISubreddit[];
 }
+
+export interface ISubredditData {
+    subreddits: ISubredditList;
+    counts: {
+        total: number;
+        private: number;
+    }
+}
