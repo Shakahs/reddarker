@@ -5,3 +5,5 @@ config.js
 src/list.json
 .wrangler
 database.sqlite
+public/dist
+subreddits.json
