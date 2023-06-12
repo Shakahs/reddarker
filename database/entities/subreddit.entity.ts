@@ -1,6 +1,6 @@
 
 
-import { Column, Entity, PrimaryColumn, ValueTransformer } from "typeorm"
+import { Column, Entity, Index, PrimaryColumn, ValueTransformer } from "typeorm"
 
 // Define a custom transformer that handles the lowercase transformation
 class LowercaseTransformer implements ValueTransformer {
@@ -15,7 +15,7 @@ class LowercaseTransformer implements ValueTransformer {
 
 @Entity()
 export class Subreddit {
-    @PrimaryColumn({ collation: "NOCASE" }) // collation: "NOCASE" makes the column case insensitive
+    @PrimaryColumn() // collation: "NOCASE" makes the column case insensitive
     name: string
 
     @Column({ nullable: true })
