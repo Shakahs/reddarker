@@ -24,4 +24,7 @@ export class Subreddit {
     @Column({ nullable: true })
     subscriber_count: number
 
+    @Column({ nullable: true })
+    modwiki_category: string
+
 }

@@ -1,3 +1,8 @@
+import { AppDataSource } from "./database/data-source";
+import { Subreddit } from "./database/entities/subreddit.entity";
+const userRepository = AppDataSource.getRepository(Subreddit)
+import { EntityManager } from 'typeorm';
+
 const express = require('express');
 const app = express();
 const http = require('http');
@@ -87,6 +92,26 @@ async function parseModWiki(): Promise<ISubredditList> {
     }
     console.log(subreddits);
     return subreddits
+}
+
+async function insertSubreddits() {
+    const subreddits = await parseModWiki();
+
+    await AppDataSource.transaction(async (transactionalEntityManager) => {
+        // execute queries using transactionalEntityManager
+        for (var section in subreddits) {
+            for (var subreddit in subreddits[section]) {
+                const sub = new Subreddit();
+                sub.name = subreddits[section][subreddit].name;
+                sub.modwiki_category = section;
+                await userRepository.upsert(sub, { conflictPaths: ["name"] });
+            }
+        }
+    })
+
+
+
+
 }
 
 
@@ -199,7 +224,14 @@ async function updateStatus() {
         }
     }
 }
+
 (async () => {
-    await parseModWiki();
+    try {
+        await AppDataSource.initialize();
+    } catch (error) {
+        console.log(error);
+    }
+    // await parseModWiki();
+    await insertSubreddits();
     // await updateStatus();
 })();
