@@ -5,6 +5,8 @@
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "strict": false,
-        "jsx": "react-jsx"
+        "jsx": "react-jsx",
+        "resolveJsonModule": true,
+        "esModuleInterop": true
     }
 }

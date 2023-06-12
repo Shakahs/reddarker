@@ -6,7 +6,7 @@ import * as cheerio from 'cheerio';
 import { sample } from 'lodash';
 import { group } from "console";
 import { writeFile } from 'node:fs/promises';
-
+import { ISubredditList, ISubreddit } from "./types"
 const express = require('express');
 const app = express();
 const http = require('http');
@@ -44,14 +44,7 @@ function isJson(item) {
 
 
 
-interface ISubreddit {
-    name: string;
-    status: string;
-}
 
-interface ISubredditList {
-    [key: string]: ISubreddit[];
-}
 
 
 const subreddits: ISubredditList = {};
