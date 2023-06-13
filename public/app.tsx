@@ -9,6 +9,7 @@ import {
     QueryClient,
     QueryClientProvider,
 } from 'react-query'
+import classNames from 'classnames';
 
 const queryClient = new QueryClient()
 
@@ -51,7 +52,7 @@ function RootLayout() {
     const { data: subredditData, isLoading, error } = subredditPollResult
 
     // Will be true if request never succeeds, and false if we have stale data to use
-    const isLoadingOrError = subredditData?.counts?.total == 0
+    const isLoadingOrError = subredditData?.counts == undefined || subredditData?.counts?.total == 0
 
     return (
         <div className='h-full w-full p-3 bg-gray-800  text-gray-200 flex flex-col items-center  '>
@@ -80,8 +81,14 @@ function RootLayout() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                                     {map(section, (subreddit) => (
                                         <div className='p-4' key={subreddit.name}>
-                                            <div className='text-lg text-greenText font-bold ' style={{ 'textShadow': '0px 0px 20px #00ffaa ' }}>{subreddit.name}</div>
-                                            <div className='text-sm text-greenText font-bold'>{subreddit.status}</div>
+                                            <div className={classNames('text-lg  font-bold', {
+                                                'text-greenText': subreddit.status == 'private',
+                                                'text-blueText': subreddit.status == 'restricted',
+                                            })} style={{ 'textShadow': '0px 0px 20px #00ffaa ' }}>{subreddit.name}</div>
+                                            <div className={classNames('text-sm font-bold', {
+                                                'text-greenText': subreddit.status == 'private',
+                                                'text-blueText': subreddit.status == 'restricted',
+                                            })}>{subreddit.status} {subreddit.status == 'public' && ':('} {subreddit.status == null && 'Not checked yet'}</div>
                                         </div>
                                     ))}
                                 </div>

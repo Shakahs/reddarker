@@ -8,6 +8,7 @@ export default {
     extend: {
       colors: {
         'greenText': '#00ffaa',
+        'blueText': '#55bbff'
       },
     },
     plugins: [],
