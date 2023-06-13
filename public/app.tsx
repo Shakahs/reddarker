@@ -61,7 +61,7 @@ function RootLayout() {
                     <div className='text-sm'>Watch a 24/7 stream of this site at <a href='https://twitch.tv/reddark_247' className={linkDecor}>twitch.tv/reddark_247!</a></div>
                     <div className='text-4xl py-6 font-bold'>✊ Reddark</div>
                     <div className='text-2xl'>These subreddits are going dark or read-only on June 12th and after. Some already are. Click <a href='https://www.theverge.com/2023/6/5/23749188/reddit-subreddit-private-protest-api-changes-apollo-charges' className={linkDecor}>here</a> to find out why.</div>
-                    <div>Like the website? Contribute <a className={linkDecor} href='https://github.com/Tanza3D/reddark' target='_blank' >here!</a></div>
+                    <div>Like the website? Contribute <a className={linkDecor} href='https://github.com/Shakahs/reddarker' target='_blank' >here!</a></div>
                 </div>
             </div>
             <div className='w-full bg-gray-900 flex  flex-row justify-end items-center py-2 my-4'>
