@@ -8,6 +8,7 @@
     "server-build": "esbuild ./main.ts --bundle --platform=node --target=node16.19  --outfile=server.js"
   },
   "dependencies": {
+    "@uidotdev/usehooks": "^2.0.1",
     "cheerio": "^1.0.0-rc.12",
     "classnames": "^2.3.2",
     "express": "^4.18.2",

@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import './tailwind.css'
-import { ISubredditData, ISubredditList } from '../types';
+import { ISubreddit, ISubredditData, ISubredditList } from '../types';
 import { map, keys } from 'lodash'
 import {
     useQuery,
@@ -10,6 +10,8 @@ import {
     QueryClientProvider,
 } from 'react-query'
 import classNames from 'classnames';
+import { useState } from 'react';
+import { useHover } from "@uidotdev/usehooks";
 
 const queryClient = new QueryClient()
 
@@ -78,24 +80,8 @@ function RootLayout() {
                         return (
                             <div key={sectionName}>
                                 <div className='text-4xl font-bold border-b'>{sectionName}</div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                                    {map(section, (subreddit) => {
-
-                                        const subRedditLink = `https://www.reddit.com/${subreddit.name}`
-
-                                        return (
-                                            <div className='p-4' key={subreddit.name}>
-                                                <div className={classNames('text-lg  font-bold', {
-                                                    'text-greenText': subreddit.status == 'private',
-                                                    'text-blueText': subreddit.status == 'restricted',
-                                                })} style={{ 'textShadow': '0px 0px 20px #00ffaa ' }}><a href={subRedditLink} target='blank'>{subreddit.name}</a></div>
-                                                <div className={classNames('text-sm font-bold', {
-                                                    'text-greenText': subreddit.status == 'private',
-                                                    'text-blueText': subreddit.status == 'restricted',
-                                                })}><a href={subRedditLink} target='blank'>{subreddit.status} {subreddit.status == 'public' && ':('} {subreddit.status == null && 'Not checked yet'}</a></div>
-                                            </div>
-                                        )
-                                    })}
+                                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                                    {map(section, (subreddit: ISubreddit) => <SubredditDisplay subreddit={subreddit} key={subreddit.name} />)}
                                 </div>
                             </div>
                         )
@@ -104,6 +90,58 @@ function RootLayout() {
             </div>
         </div>
     );
+}
+
+const SubredditDisplay = ({ subreddit }: { subreddit: ISubreddit }) => {
+    const [ref, hovering] = useHover();
+
+    const subRedditLink = `https://www.reddit.com/${subreddit.name}`
+    let subredditColor: null | string = null
+    if (subreddit.status == 'private') {
+        subredditColor = 'greenText'
+    } else if (subreddit.status == 'restricted') {
+        subredditColor = 'blueText'
+    }
+
+    const cleandProtestMessage = subreddit?.protest_message?.replace(/<\/?[^a][^>]*>/gi, '');
+    const style = {
+        a: {
+            'textDecoration': 'underline'
+        }
+    }
+
+    return (
+        <div ref={ref} className='p-6  hover:col-span-2  flex flex-col ' key={subreddit.name}>
+            <div className='h-full w-full hover:border-4 border-greenText rounded-lg p-2'>
+                {/* //First row  */}
+                <div className='flex flex-row justify-between'>
+                    {/* left item */}
+                    <div>
+                        <div className={classNames('text-lg  font-bold', {
+                            'text-greenText': subreddit.status == 'private',
+                            'text-blueText': subreddit.status == 'restricted',
+                        })} style={{ 'textShadow': '0px 0px 20px #00ffaa ' }}><a href={subRedditLink} target='blank'>{subreddit.name}</a></div>
+                        <div className={classNames('text-sm font-bold', {
+                            'text-greenText': subreddit.status == 'private',
+                            'text-blueText': subreddit.status == 'restricted',
+                        })}><a href={subRedditLink} target='blank'>{subreddit.status} {subreddit.status == 'public' && ':('} {subreddit.status == null && 'Not checked yet'}</a>
+                        </div>
+                    </div>
+                    {subreddit?.subscriber_count > 0 && <div className={classNames(' underline text-md font-bold pr-2 flex flex-col justify-center', {
+                        [`text-${subredditColor}`]: subredditColor,
+                        'hidden': !hovering,
+                    })}>{subreddit?.subscriber_count.toLocaleString()} subscribers</div>}
+                </div>
+                {/* second row */}
+                <div>
+                    {subreddit?.protest_message && <div className={classNames('text-xs protestContainer', {
+                        'hidden': !hovering,
+                        [`text-${subredditColor}`]: subredditColor,
+                    })} dangerouslySetInnerHTML={{ __html: cleandProtestMessage }} />}
+                </div>
+            </div>
+        </div>
+    )
 }
 
 const root = createRoot(document.getElementById('react-root'));
