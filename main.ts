@@ -247,8 +247,10 @@ async function writeSubredditJSON() {
             }
         }
 
-        await writeFile('subreddits.json', JSON.stringify(dataDump))
-        console.log('subreddits.json written');
+        await writeFile('/usr/share/caddy/frontend/api/subreddits.json', JSON.stringify(dataDump))
+        // await writeFile('dist/subreddits.json', JSON.stringify(dataDump))
+
+        console.log('subreddits.json written ');
     } catch (e) {
         console.log(e);
         console.log('error writing subreddits.json');
@@ -374,7 +376,7 @@ AppDataSource.initialize().then(async () => {
 
     setInterval(async () => {
         await pollSubreddits();
-    }, 5000);
+    }, 1000);
     // await updateStatus();
 
     setInterval(async () => {

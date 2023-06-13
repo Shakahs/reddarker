@@ -9,3 +9,4 @@ public/dist
 subreddits.json
 dist/
 .DS_store
+server.js

@@ -8,10 +8,6 @@
         "jsx": "react-jsx",
         "resolveJsonModule": true,
         "esModuleInterop": true,
-        "lib": [
-            "es5",
-            "es6"
-        ],
         "moduleResolution": "node",
     },
     "exclude": [

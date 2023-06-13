@@ -1,0 +1,17 @@
+[Unit]
+Description=ReddarkServer backend!
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /usr/share/caddy/backend/server.js
+WorkingDirectory=/usr/share/caddy/backend
+User=caddy
+Restart=always
+#StandardOutput=file:/var/log/reddarkServer.log
+#StandardError=file:/var/log/reddarkServer.log
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment=NODE_ENV=production
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

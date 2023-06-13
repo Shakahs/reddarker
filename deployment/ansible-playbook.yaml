@@ -1,0 +1,125 @@
+---
+- hosts: all
+  remote_user: root
+  tasks:
+    - name: Update the system packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+        update_cache: true
+      become: true
+      notify: systemrestart
+    - name: Install the EPEL repository
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+      become: true
+    - name: Enable nodejs module stream
+      command:
+        cmd: dnf module enable -y nodejs:18
+    - name: Install packages
+      become: true
+      vars:
+        packages:
+          - caddy
+          - nodejs
+          - fish
+          - htop
+          - nload
+          - iftop
+          - iotop
+          - util-linux-user
+          # - '@nodejs:18'
+      ansible.builtin.dnf:
+        name: "{{ packages | join(',') }}"
+        state: present
+    - name: Ensure /var/log/caddy-access.log exists
+      file:
+        path: /var/log/caddy-access.log
+        state: file
+        owner: caddy
+        group: caddy
+        mode: '0644'
+    - name: Ensure /var/log/caddy-errors.log exists
+      file:
+        path: /var/log/caddy-errors.log
+        state: file
+        owner: caddy
+        group: caddy
+        mode: '0644'
+    - name: Install Caddyfile
+      become: true
+      ansible.builtin.copy:
+        src: './Caddyfile'
+        dest: /etc/caddy/Caddyfile
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restartcaddy
+    - name: Copy frontend files
+      become: true
+      ansible.builtin.copy:
+        src: '../dist/'
+        dest: /usr/share/caddy/frontend/
+        owner: caddy
+        group: caddy
+        mode: 0700
+    - name: Ensure the backend directory exists
+      file:
+        path: /usr/share/caddy/backend/api/
+        owner: caddy
+        group: caddy
+        state: directory
+        mode: '0755'
+    - name: Ensure the api directory exists
+      file:
+        path: /usr/share/caddy/frontend/api/
+        owner: caddy
+        group: caddy
+        state: directory
+        mode: '0755'
+    - name: Install sqlite dependency
+      npm:
+        name: sqlite3
+        path: /usr/share/caddy/backend/
+    - name: Copy backend files
+      become: true
+      ansible.builtin.copy:
+        src: '../server.js'
+        dest: /usr/share/caddy/backend/server.js
+        owner: caddy
+        group: caddy
+        mode: 0700
+      notify: restartreddarkserver
+    - name: Copy the reddarkServer systemd unit
+      become: true
+      ansible.builtin.copy:
+        src: './reddarkServer.service'
+        dest: /etc/systemd/system/reddarkServer.service
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restartreddarkserver
+  handlers:
+    - name: systemrestart
+      become: true
+      ansible.builtin.reboot:
+        reboot_timeout: 60
+        msg: "Rebooting the system to apply updates"
+        post_reboot_delay: 60
+    - name: restartcaddy
+      become: true
+      ansible.builtin.systemd:
+        name: caddy
+        state: restarted
+        enabled: true
+        daemon_reload: true
+    - name: restartreddarkserver
+      become: true
+      ansible.builtin.systemd:
+        name: reddarkServer
+        state: restarted
+        enabled: true
+        daemon_reload: true
+
+
