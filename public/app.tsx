@@ -134,10 +134,12 @@ const SubredditDisplay = ({ subreddit }: { subreddit: ISubreddit }) => {
                 </div>
                 {/* second row */}
                 <div>
-                    {subreddit?.protest_message && <div className={classNames('text-xs protestContainer', {
-                        'hidden': !hovering,
-                        [`text-${subredditColor}`]: subredditColor,
-                    })} dangerouslySetInnerHTML={{ __html: cleandProtestMessage }} />}
+                    {subreddit?.protest_message && <div className='p-2 '>
+                        <div className={classNames('font-light protestContainer pl-2 border-l-2', {
+                            'hidden': !hovering,
+                            [`text-${subredditColor}`]: subredditColor,
+                            [`border-${subredditColor}`]: subredditColor,
+                        })} dangerouslySetInnerHTML={{ __html: cleandProtestMessage }} /></div>}
                 </div>
             </div>
         </div>
