@@ -1,11 +1,31 @@
+const sounds = [
+    {
+        "name": "Guitar",
+        "public": "guitar_public.mp3",
+        "privated": "guitar_privated.mp3"
+    },
+    {
+        "name": "Tubular Bell",
+        "public": "tubularbell_public.mp3",
+        "privated": "tubularbell_privated.mp3"
+    },
+    {
+        "name": "Vibraphone",
+        "public": "vibraphone_public.mp3",
+        "privated": "vibraphone_privated.mp3"
+    }
+]
+
 var audioSystem = {
     playAudio: false,
-    play: function (file) {
-        var audio = new Audio('/audio/' + file + ".mp3");
+    chosenSound: 0,
+    play: function (status) {
+        var audio = new Audio('/audio/' + sounds[this.chosenSound][status]);
         if (this.playAudio == true)
             audio.play();
     }
 }
+
 document.getElementById("enable_sounds").addEventListener("click", function () {
     if (audioSystem.playAudio == false) {
         document.getElementById("enable_sounds").innerHTML = "Disable sound alerts"
@@ -18,6 +38,17 @@ document.getElementById("enable_sounds").addEventListener("click", function () {
         document.getElementById("enable_sounds").innerHTML = "Enable sound alerts"
     }
 })
+
+document.getElementById("change_sound").addEventListener("click", function () {
+    audioSystem.chosenSound++;
+    if (audioSystem.chosenSound >= sounds.length) {
+        audioSystem.chosenSound = 0;
+    }
+    document.getElementById("change_sound").innerHTML = sounds[audioSystem.chosenSound].name;
+    newStatusUpdate("Changed sound to " + sounds[audioSystem.chosenSound].name + ".");
+    audioSystem.play("privated");
+})
+
 var socket = io();
 var subreddits = {};
 var amount = 0;
