@@ -248,7 +248,7 @@ async function writeSubredditJSON() {
         }
 
         await writeFile('/usr/share/caddy/frontend/api/subreddits.json', JSON.stringify(dataDump))
-        // await writeFile('dist/subreddits.json', JSON.stringify(dataDump))
+        // await writeFile('dist/api/subreddits.json', JSON.stringify(dataDump))
 
         console.log('subreddits.json written ');
     } catch (e) {
