@@ -32,14 +32,26 @@ const srKeys = [
 
 const linkDecor = 'text-blue-300 underline'
 
+function createRoundedDateString(): string {
+    var date = new Date();
+    date.setMilliseconds(0); // Zero out the milliseconds
+    var seconds = date.getSeconds();
+    var roundedSeconds = Math.round(seconds / 15) * 15;
+    date.setSeconds(roundedSeconds);
+    return date.toISOString();
+}
+
 function RootLayout() {
     const subredditPollResult = useQuery<ISubredditData>({
         queryKey: 'subreddits',
-        queryFn: () => fetch('/api/subreddits.json').then(res => res.json()),
+        queryFn: () => fetch(`/api/subreddits.json?date=${createRoundedDateString()}`).then(res => res.json()),
         refetchInterval: 1000 * 5,
         placeholderData: { counts: { total: 0, private: 0 }, subreddits: {} }
     })
-    const { data: subredditData } = subredditPollResult
+    const { data: subredditData, isLoading, error } = subredditPollResult
+
+    // Will be true if request never succeeds, and false if we have stale data to use
+    const isLoadingOrError = subredditData?.counts?.total == 0
 
     return (
         <div className='h-full w-full p-3 bg-gray-800  text-gray-200 flex flex-col items-center  '>
@@ -53,27 +65,30 @@ function RootLayout() {
             </div>
             <div className='w-full bg-gray-900 flex  flex-row justify-end items-center py-2 my-4'>
                 {/* <div>search</div> */}
-                <div><span className='text-2xl pr-1'>{subredditData.counts.private}</span> / {subredditData.counts.total} subreddits are currently dark.</div>
+                <div><span className='text-2xl pr-1'>{subredditData?.counts.private ?? 0}</span> / {subredditData?.counts.total ?? 0} subreddits are currently dark.</div>
             </div>
             <div className='w-5/6'>
-                {map(srKeys, (sectionName) => {
+                {isLoadingOrError ? <div className='text-2xl'>Loading...</div> :
 
-                    const section = subredditData.subreddits[sectionName]
+                    map(srKeys, (sectionName) => {
 
-                    return (
-                        <div key={sectionName}>
-                            <div className='text-4xl font-bold border-b'>{sectionName}</div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                                {map(section, (subreddit) => (
-                                    <div className='p-4' key={subreddit.name}>
-                                        <div className='text-lg text-greenText font-bold ' style={{ 'textShadow': '0px 0px 20px #00ffaa ' }}>{subreddit.name}</div>
-                                        <div className='text-sm text-greenText font-bold'>{subreddit.status}</div>
-                                    </div>
-                                ))}
+                        const section = subredditData.subreddits[sectionName]
+
+                        return (
+                            <div key={sectionName}>
+                                <div className='text-4xl font-bold border-b'>{sectionName}</div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                                    {map(section, (subreddit) => (
+                                        <div className='p-4' key={subreddit.name}>
+                                            <div className='text-lg text-greenText font-bold ' style={{ 'textShadow': '0px 0px 20px #00ffaa ' }}>{subreddit.name}</div>
+                                            <div className='text-sm text-greenText font-bold'>{subreddit.status}</div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )
-                })}
+                        )
+                    })
+                }
             </div>
         </div>
     );
