@@ -17,4 +17,11 @@ The server polls the database for subreddit status and writes a JSON file to dis
 
 Frontend polls the JSON data from the backend/CDN every 15 seconds and appends a query string rounded to the nearest 15 second interval. (/api/subreddits.json?date=2023-06-13T21:22:45.000Z). This ensures that data is served by the CDN by only "busting" the cache every 15 seconds. 
 
+## Running locally
 
+```
+npm install
+mkdir -p dist/api  
+npm run dev
+npm run server
+```
