@@ -79,18 +79,23 @@ function RootLayout() {
                             <div key={sectionName}>
                                 <div className='text-4xl font-bold border-b'>{sectionName}</div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                                    {map(section, (subreddit) => (
-                                        <div className='p-4' key={subreddit.name}>
-                                            <div className={classNames('text-lg  font-bold', {
-                                                'text-greenText': subreddit.status == 'private',
-                                                'text-blueText': subreddit.status == 'restricted',
-                                            })} style={{ 'textShadow': '0px 0px 20px #00ffaa ' }}>{subreddit.name}</div>
-                                            <div className={classNames('text-sm font-bold', {
-                                                'text-greenText': subreddit.status == 'private',
-                                                'text-blueText': subreddit.status == 'restricted',
-                                            })}>{subreddit.status} {subreddit.status == 'public' && ':('} {subreddit.status == null && 'Not checked yet'}</div>
-                                        </div>
-                                    ))}
+                                    {map(section, (subreddit) => {
+
+                                        const subRedditLink = `https://www.reddit.com/${subreddit.name}`
+
+                                        return (
+                                            <div className='p-4' key={subreddit.name}>
+                                                <div className={classNames('text-lg  font-bold', {
+                                                    'text-greenText': subreddit.status == 'private',
+                                                    'text-blueText': subreddit.status == 'restricted',
+                                                })} style={{ 'textShadow': '0px 0px 20px #00ffaa ' }}><a href={subRedditLink} target='blank'>{subreddit.name}</a></div>
+                                                <div className={classNames('text-sm font-bold', {
+                                                    'text-greenText': subreddit.status == 'private',
+                                                    'text-blueText': subreddit.status == 'restricted',
+                                                })}><a href={subRedditLink} target='blank'>{subreddit.status} {subreddit.status == 'public' && ':('} {subreddit.status == null && 'Not checked yet'}</a></div>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         )
