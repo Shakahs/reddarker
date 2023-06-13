@@ -1,7 +1,6 @@
+/** @type {import('vite').UserConfig} */
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-
-
 
 module.exports = {
     plugins: [react()],
@@ -13,5 +12,8 @@ module.exports = {
                 // rewrite: (path) => path.replace(/^\/api/, '')
             }
         }
+    },
+    build: {
+        target: 'es2015',
     }
 }
