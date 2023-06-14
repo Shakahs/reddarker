@@ -3,6 +3,7 @@ export interface ISubreddit {
     status: string;
     subscriber_count?: number;
     protest_message?: string
+    last_checked?: string;
 }
 
 export interface ISubredditList {

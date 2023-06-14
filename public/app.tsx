@@ -12,6 +12,7 @@ import {
 import classNames from 'classnames';
 import { useState } from 'react';
 import { useHover } from "@uidotdev/usehooks";
+import { DateTime } from "luxon";
 
 const queryClient = new QueryClient()
 
@@ -92,6 +93,28 @@ function RootLayout() {
     );
 }
 
+
+const getElapsedTime = (isoDateString: string): string => {
+    const now = DateTime.now();
+    const past = DateTime.fromISO(isoDateString);
+    const diff = now.diff(past, ['hours', 'minutes']);
+
+    const hours = Math.floor(diff.hours);
+    const minutes = Math.floor(diff.minutes - hours * 60);
+
+    if (hours == 1) {
+        return `${hours} hour ago`;
+    }
+    else if (hours > 0) {
+        return `${hours} hours ago`;
+    } else if (minutes > 0) {
+        return `${minutes} minutes ago`;
+    } else {
+        return `Just now`;
+    }
+};
+
+
 const SubredditDisplay = ({ subreddit }: { subreddit: ISubreddit }) => {
     const [ref, hovering] = useHover();
 
@@ -109,6 +132,8 @@ const SubredditDisplay = ({ subreddit }: { subreddit: ISubreddit }) => {
             'textDecoration': 'underline'
         }
     }
+
+    const lastChecked = subreddit.last_checked ? getElapsedTime(subreddit.last_checked) : 'Never'
 
     return (
         <div ref={ref} className='p-6  hover:col-span-2  flex flex-col ' key={subreddit.name}>
@@ -140,6 +165,12 @@ const SubredditDisplay = ({ subreddit }: { subreddit: ISubreddit }) => {
                             [`text-${subredditColor}`]: subredditColor,
                             [`border-${subredditColor}`]: subredditColor,
                         })} dangerouslySetInnerHTML={{ __html: cleandProtestMessage }} /></div>}
+                </div>
+                <div className={classNames('text-xs', {
+                    'hidden': !hovering,
+                    [`text-${subredditColor}`]: subredditColor,
+                })}>
+                    <div>Last checked: {lastChecked}</div>
                 </div>
             </div>
         </div>
