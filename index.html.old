@@ -51,6 +51,7 @@
             <div class="tools-left">
                 <div class="button" onclick="toggleLargeCounter()">Large counter</div>
                 <div class="button" id="enable_sounds">Enable sound alerts</div>
+                <div class="button" id="change_sound">Guitar</div>
             </div>
         </div>
     </div>
